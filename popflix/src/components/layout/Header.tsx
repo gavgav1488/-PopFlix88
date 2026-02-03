@@ -7,6 +7,7 @@ import { Search, Menu, X, LogOut, User } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useAuth } from '@/hooks/useAuth'
 
 export function Header() {
@@ -92,6 +93,8 @@ export function Header() {
 
           {/* User Menu */}
           <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            
             {user && (
               <div className="hidden md:flex items-center space-x-2">
                 <div className="flex items-center space-x-2 text-sm">
