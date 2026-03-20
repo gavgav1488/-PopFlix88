@@ -62,6 +62,15 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Интегрирован OMDb API вместо TMDB
 - Обновлена структура проекта (перемещено из popflix/ в корень)
 
+## Changelog
+
+### 2026-03-20 (сессия 3)
+- Создан `docs/README.md` — источник архитектурной правды
+- Добавлен `src/lib/supabase/admin.ts` — Admin клиент для Supabase
+- Добавлен `src/app/(dashboard)/watched/` — страница просмотренных
+- Добавлен `src/app/api/migrate/` — API route для миграции
+- Коммит и пуш: `1edde1c`
+
 ## Контроль изменений
-- **last_checked_commit:** a143aaf
+- **last_checked_commit:** 1edde1c
 - **Последняя проверка:** 2026-03-20
