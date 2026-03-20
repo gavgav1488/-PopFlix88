@@ -36,13 +36,20 @@ export async function GET() {
   const results: { sql: string; ok: boolean; error?: string }[] = [];
 
   for (const sql of migrations) {
-    const { error } = await supabase.rpc("exec_sql" as never, {
-      sql,
-    } as never);
+    const { error } = await supabase.rpc(
+      "exec_sql" as never,
+      {
+        sql,
+      } as never,
+    );
 
     // Если RPC не существует — пробуем через прямой запрос
     if (error?.code === "PGRST202") {
-      results.push({ sql: sql.slice(0, 60), ok: false, error: "No exec_sql RPC" });
+      results.push({
+        sql: sql.slice(0, 60),
+        ok: false,
+        error: "No exec_sql RPC",
+      });
       continue;
     }
 

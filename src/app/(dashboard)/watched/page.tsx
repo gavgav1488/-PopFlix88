@@ -55,7 +55,10 @@ export default function WatchedPage() {
         <h1 className="text-3xl font-bold">Просмотренные фильмы 🎬</h1>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {Array.from({ length: 10 }, (_, i) => String(i)).map((k) => (
-            <div key={k} className="aspect-[2/3] bg-muted rounded-lg animate-pulse" />
+            <div
+              key={k}
+              className="aspect-[2/3] bg-muted rounded-lg animate-pulse"
+            />
           ))}
         </div>
       </div>

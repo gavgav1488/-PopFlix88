@@ -14,10 +14,10 @@
 - ✅ OnboardingForm: сохранение через API route, исправлена кнопка
 
 ## Известные проблемы (Known Issues)
-1. 🔴 Таблица `user_movies` отсутствует в Supabase — нужно создать через SQL Editor
-2. OMDb API: 1000 req/day лимит на бесплатном тарифе
-3. WatchProviders всегда пустой (OMDb не поддерживает)
-4. Постеры актёров недоступны (OMDb не предоставляет)
+1. OMDb API: 1000 req/day лимит на бесплатном тарифе
+2. WatchProviders всегда пустой (OMDb не поддерживает)
+3. Постеры актёров недоступны (OMDb не предоставляет)
+4. Типизация Supabase - LSP показывает ошибки типов, но код работает (кеширование)
 
 ## SQL для создания таблицы user_movies
 ```sql
@@ -38,7 +38,21 @@ CREATE POLICY "Users can manage own movies" ON public.user_movies
 CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 ```
 
-## Changelog
+### 2026-03-20 (сессия 4)
+- Создан `/api/user/movies/favorites` — API route для избранного
+- Создан `/api/user/movies/watched` — API route для просмотренных
+- Создан `/favorites` — страница избранного
+- Страница `/stats` уже существовала, проверена
+- Установлен Supabase CLI (winget)
+- Таблица `user_movies` создана в Supabase через CLI
+- Biome lint: 72 файла, 0 ошибок
+
+### 2026-03-20 (сессия 3)
+- Создан `docs/README.md` — источник архитектурной правды
+- Добавлен `src/lib/supabase/admin.ts` — Admin клиент для Supabase
+- Добавлен `src/app/(dashboard)/watched/` — страница просмотренных
+- Добавлен `src/app/api/migrate/` — API route для миграции
+- Коммит и пуш: `1edde1c`
 
 ### 2026-03-20 (сессия 2)
 - `LoginForm` — отображение ошибок аутентификации на русском языке
@@ -54,7 +68,6 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - `src/lib/supabase/server.ts` — переписан под новый Next.js API
 - `middleware.ts` — исправлен cookie API
 - Все типы обновлены под `user_movies` таблицу
-- Biome lint: 57 файлов, 0 ошибок
 
 ### 2026-03-13
 - Создана структура Memory Bank
@@ -62,15 +75,6 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Интегрирован OMDb API вместо TMDB
 - Обновлена структура проекта (перемещено из popflix/ в корень)
 
-## Changelog
-
-### 2026-03-20 (сессия 3)
-- Создан `docs/README.md` — источник архитектурной правды
-- Добавлен `src/lib/supabase/admin.ts` — Admin клиент для Supabase
-- Добавлен `src/app/(dashboard)/watched/` — страница просмотренных
-- Добавлен `src/app/api/migrate/` — API route для миграции
-- Коммит и пуш: `1edde1c`
-
 ## Контроль изменений
-- **last_checked_commit:** 1edde1c
+- **last_checked_commit:** 60ebaba
 - **Последняя проверка:** 2026-03-20
