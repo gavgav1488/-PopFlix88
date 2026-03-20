@@ -12,29 +12,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { SupabaseService } from "@/lib/supabase/service";
 import type { Genre } from "@/types";
 
 export function OnboardingForm() {
-  const [_step, _setStep] = useState(1);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGenres, setIsLoadingGenres] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const supabaseService = new SupabaseService();
 
-  // Загружаем жанры при монтировании компонента
   useEffect(() => {
     const fetchGenres = async () => {
       try {
         const response = await fetch("/api/movies/genres");
         const data = await response.json();
         setGenres(data.genres || []);
-      } catch (error) {
-        console.error("Error fetching genres:", error);
+      } catch (err) {
+        console.error("Error fetching genres:", err);
       } finally {
         setIsLoadingGenres(false);
       }
@@ -52,20 +49,34 @@ export function OnboardingForm() {
   };
 
   const handleSavePreferences = async () => {
-    if (!user) return;
+    if (!user) {
+      setError("Пользователь не авторизован. Попробуйте перезайти.");
+      return;
+    }
 
     try {
       setIsLoading(true);
+      setError(null);
 
-      await supabaseService.updatePreferences(user.id, {
-        favorite_genres: selectedGenres,
-        favorite_actors: [],
-        favorite_directors: [],
+      const response = await fetch("/api/user/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          favorite_genres: selectedGenres,
+          favorite_actors: [],
+          favorite_directors: [],
+        }),
       });
 
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Ошибка сохранения");
+      }
+
       router.push("/dashboard");
-    } catch (error) {
-      console.error("Error saving preferences:", error);
+    } catch (err) {
+      console.error("Error saving preferences:", err);
+      setError("Не удалось сохранить предпочтения. Попробуйте ещё раз.");
     } finally {
       setIsLoading(false);
     }
@@ -75,11 +86,11 @@ export function OnboardingForm() {
     router.push("/dashboard");
   };
 
-  if (isLoadingGenres) {
+  if (isLoadingGenres || authLoading) {
     return (
       <Card className="w-full max-w-2xl mx-auto">
         <CardContent className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </CardContent>
       </Card>
     );
@@ -124,6 +135,10 @@ export function OnboardingForm() {
           </div>
         )}
 
+        {error && (
+          <div className="text-center text-sm text-destructive">{error}</div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <Button
             variant="outline"
@@ -136,7 +151,7 @@ export function OnboardingForm() {
           <Button
             onClick={handleSavePreferences}
             className="flex-1"
-            disabled={isLoading || selectedGenres.length === 0}
+            disabled={isLoading || selectedGenres.length === 0 || !user}
           >
             {isLoading ? "Сохранение..." : "Продолжить"}
           </Button>

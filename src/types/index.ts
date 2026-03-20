@@ -15,9 +15,9 @@ export interface UserPreferences {
   favorite_directors: string[];
 }
 
-// Фильм из TMDB
+// Фильм
 export interface Movie {
-  id: number;
+  id: string | number;
   title: string;
   overview: string;
   poster_path: string | null;
@@ -57,8 +57,8 @@ export interface CrewMember {
 export interface WatchedMovie {
   id: string;
   user_id: string;
-  tmdb_id: number;
-  rating: number;
+  movie_id: string;
+  rating: number | null;
   watched_at: string;
   notes?: string;
   movie?: Movie;
@@ -68,7 +68,7 @@ export interface WatchedMovie {
 export interface FavoriteMovie {
   id: string;
   user_id: string;
-  tmdb_id: number;
+  movie_id: string;
   added_at: string;
   movie?: Movie;
 }

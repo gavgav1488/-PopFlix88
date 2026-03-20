@@ -73,6 +73,10 @@ function DefaultErrorFallback({
   error?: Error;
   resetError: () => void;
 }) {
+  const goHome = () => {
+    window.location.href = "/dashboard";
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -82,8 +86,7 @@ function DefaultErrorFallback({
           </div>
           <CardTitle className="text-xl">Что-то пошло не так</CardTitle>
           <CardDescription>
-            Произошла неожиданная ошибка. Попробуйте обновить страницу или
-            вернуться позже.
+            Произошла неожиданная ошибка. Попробуйте обновить страницу.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -102,11 +105,7 @@ function DefaultErrorFallback({
               <RefreshCw className="mr-2 h-4 w-4" />
               Попробовать снова
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => (window.location.href = "/dashboard")}
-              className="w-full"
-            >
+            <Button variant="outline" onClick={goHome} className="w-full">
               Вернуться на главную
             </Button>
           </div>
@@ -116,7 +115,6 @@ function DefaultErrorFallback({
   );
 }
 
-// Hook для использования в функциональных компонентах
 export function useErrorBoundary() {
   const [error, setError] = React.useState<Error | null>(null);
 
@@ -124,8 +122,8 @@ export function useErrorBoundary() {
     setError(null);
   }, []);
 
-  const captureError = React.useCallback((error: Error) => {
-    setError(error);
+  const captureError = React.useCallback((err: Error) => {
+    setError(err);
   }, []);
 
   React.useEffect(() => {

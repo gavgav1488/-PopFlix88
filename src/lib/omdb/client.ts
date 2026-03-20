@@ -1,5 +1,35 @@
 import type { Movie } from "@/types";
 
+interface OMDbSearchItem {
+  imdbID: string;
+  Title: string;
+  Year: string;
+  Poster: string;
+}
+
+interface OMDbSearchResponse {
+  Search?: OMDbSearchItem[];
+  totalResults?: string;
+  Response: string;
+  Error?: string;
+}
+
+interface OMDbMovieResponse {
+  imdbID: string;
+  Title: string;
+  Plot: string;
+  Poster: string;
+  Released: string;
+  Year: string;
+  Runtime: string;
+  Genre: string;
+  Actors: string;
+  Director: string;
+  imdbRating: string;
+  Response: string;
+  Error?: string;
+}
+
 export class OMDbClient {
   private apiKey: string;
   private baseURL = "http://www.omdbapi.com";
@@ -12,16 +42,18 @@ export class OMDbClient {
     }
   }
 
-  private async request(params: Record<string, string>): Promise<any> {
+  private async request(
+    params: Record<string, string>,
+  ): Promise<OMDbSearchResponse | OMDbMovieResponse> {
     const url = new URL(this.baseURL);
     url.searchParams.append("apikey", this.apiKey);
 
-    Object.entries(params).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(params)) {
       url.searchParams.append(key, value);
-    });
+    }
 
     const response = await fetch(url.toString(), {
-      next: { revalidate: 3600 }, // Кэш на 1 час
+      next: { revalidate: 3600 },
     });
 
     if (!response.ok) {
@@ -30,7 +62,7 @@ export class OMDbClient {
       );
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as OMDbSearchResponse;
 
     if (data.Response === "False") {
       throw new Error(data.Error || "OMDb API error");
@@ -44,15 +76,14 @@ export class OMDbClient {
     query: string,
     page: number = 1,
   ): Promise<{ results: Movie[]; total_pages: number; total_results: number }> {
-    const response = await this.request({
+    const response = (await this.request({
       s: query,
       type: "movie",
       page: page.toString(),
-    });
+    })) as OMDbSearchResponse;
 
     const results =
-      response.Search?.map((item: any) => this.transformSearchResult(item)) ||
-      [];
+      response.Search?.map((item) => this.transformSearchResult(item)) || [];
     const totalResults = parseInt(response.totalResults || "0", 10);
     const totalPages = Math.ceil(totalResults / 10);
 
@@ -65,10 +96,10 @@ export class OMDbClient {
 
   // Детали фильма по ID (IMDb ID)
   async getMovieDetails(imdbId: string): Promise<Movie> {
-    const response = await this.request({
+    const response = (await this.request({
       i: imdbId,
       plot: "full",
-    });
+    })) as OMDbMovieResponse;
 
     return this.transformMovie(response);
   }
@@ -84,7 +115,7 @@ export class OMDbClient {
       params.y = year;
     }
 
-    const response = await this.request(params);
+    const response = (await this.request(params)) as OMDbMovieResponse;
     return this.transformMovie(response);
   }
 
@@ -113,8 +144,56 @@ export class OMDbClient {
     };
   }
 
+  // Топ рейтинговые фильмы (эмуляция через поиск классики)
+  async getTopRatedMovies(
+    page: number = 1,
+  ): Promise<{ results: Movie[]; total_pages: number }> {
+    const topRatedSearches = [
+      "Godfather",
+      "Shawshank",
+      "Schindler",
+      "Pulp Fiction",
+      "Dark Knight",
+      "Forrest Gump",
+      "Fight Club",
+      "Goodfellas",
+    ];
+
+    const searchTerm =
+      topRatedSearches[Math.floor(Math.random() * topRatedSearches.length)];
+    const response = await this.searchMovies(searchTerm, page);
+
+    return {
+      results: response.results,
+      total_pages: response.total_pages,
+    };
+  }
+
+  // Новинки (эмуляция через поиск по текущему году)
+  async getNowPlayingMovies(
+    page: number = 1,
+  ): Promise<{ results: Movie[]; total_pages: number }> {
+    const currentYear = new Date().getFullYear().toString();
+    const response = (await this.request({
+      s: "movie",
+      type: "movie",
+      y: currentYear,
+      page: page.toString(),
+    })) as OMDbSearchResponse;
+
+    const results =
+      response.Search?.map((item) => this.transformSearchResult(item)) || [];
+    const totalResults = parseInt(response.totalResults || "0", 10);
+    const totalPages = Math.ceil(totalResults / 10);
+
+    return {
+      results,
+      total_pages: totalPages,
+    };
+  }
+
   // Трансформация результата поиска
-  private transformSearchResult(omdbMovie: any): Movie {
+  private transformSearchResult(omdbMovie: OMDbSearchItem): Movie {
     return {
       id: omdbMovie.imdbID,
       title: omdbMovie.Title,
@@ -131,15 +210,15 @@ export class OMDbClient {
   }
 
   // Трансформация полных данных фильма
-  private transformMovie(omdbMovie: any): Movie {
+  private transformMovie(omdbMovie: OMDbMovieResponse): Movie {
     const genres =
-      omdbMovie.Genre?.split(", ").map((name: string, index: number) => ({
+      omdbMovie.Genre?.split(", ").map((name, index) => ({
         id: index,
         name,
       })) || [];
 
     const cast =
-      omdbMovie.Actors?.split(", ").map((name: string, index: number) => ({
+      omdbMovie.Actors?.split(", ").map((name, index) => ({
         id: index,
         name,
         character: "",
@@ -147,7 +226,7 @@ export class OMDbClient {
       })) || [];
 
     const crew =
-      omdbMovie.Director?.split(", ").map((name: string, index: number) => ({
+      omdbMovie.Director?.split(", ").map((name, index) => ({
         id: index,
         name,
         job: "Director",

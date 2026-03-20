@@ -14,13 +14,8 @@ export class SupabaseService {
     const { data, error } = await this.supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
+      options: { data: { full_name: fullName } },
     });
-
     if (error) throw error;
     return data.user;
   }
@@ -30,7 +25,6 @@ export class SupabaseService {
       email,
       password,
     });
-
     if (error) throw error;
     return data.user;
   }
@@ -58,10 +52,9 @@ export class SupabaseService {
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") return null; // Не найден
+      if (error.code === "PGRST116") return null;
       throw error;
     }
-
     return data;
   }
 
@@ -72,7 +65,6 @@ export class SupabaseService {
       .eq("id", userId)
       .select()
       .single();
-
     if (error) throw error;
     return data;
   }
@@ -86,10 +78,9 @@ export class SupabaseService {
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") return null; // Не найден
+      if (error.code === "PGRST116") return null;
       throw error;
     }
-
     return data;
   }
 
@@ -99,120 +90,143 @@ export class SupabaseService {
   ) {
     const { data, error } = await this.supabase
       .from("user_preferences")
-      .upsert({
-        user_id: userId,
-        ...preferences,
-      })
+      .upsert({ user_id: userId, ...preferences })
       .select()
       .single();
-
     if (error) throw error;
     return data;
   }
 
-  // Просмотренные фильмы
+  // Просмотренные фильмы (через user_movies)
   async addWatchedMovie(
     userId: string,
-    movieId: number,
-    rating: number,
-    notes?: string,
+    movieId: string,
+    rating: number | null,
   ) {
     const { data, error } = await this.supabase
-      .from("watched_movies")
-      .upsert({
-        user_id: userId,
-        tmdb_id: movieId,
-        rating,
-        notes,
-      })
+      .from("user_movies")
+      .upsert(
+        {
+          user_id: userId,
+          movie_id: movieId,
+          is_watched: true,
+          rating,
+          watched_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,movie_id" },
+      )
       .select()
       .single();
-
     if (error) throw error;
     return data;
   }
 
   async getWatchedMovies(userId: string): Promise<WatchedMovie[]> {
     const { data, error } = await this.supabase
-      .from("watched_movies")
+      .from("user_movies")
       .select("*")
       .eq("user_id", userId)
+      .eq("is_watched", true)
       .order("watched_at", { ascending: false });
-
     if (error) throw error;
-    return data || [];
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      user_id: row.user_id,
+      movie_id: row.movie_id,
+      rating: row.rating,
+      watched_at: row.watched_at ?? row.updated_at,
+    }));
   }
 
-  async removeWatchedMovie(userId: string, movieId: number) {
+  async removeWatchedMovie(userId: string, movieId: string) {
     const { error } = await this.supabase
-      .from("watched_movies")
-      .delete()
+      .from("user_movies")
+      .update({
+        is_watched: false,
+        watched_at: null,
+        updated_at: new Date().toISOString(),
+      })
       .eq("user_id", userId)
-      .eq("tmdb_id", movieId);
-
+      .eq("movie_id", movieId);
     if (error) throw error;
   }
 
-  // Избранное
-  async addToFavorites(userId: string, movieId: number) {
+  // Избранное (через user_movies)
+  async addToFavorites(userId: string, movieId: string) {
     const { data, error } = await this.supabase
-      .from("favorite_movies")
-      .insert({
-        user_id: userId,
-        tmdb_id: movieId,
-      })
+      .from("user_movies")
+      .upsert(
+        {
+          user_id: userId,
+          movie_id: movieId,
+          is_favorite: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,movie_id" },
+      )
       .select()
       .single();
-
     if (error) throw error;
     return data;
   }
 
   async getFavoriteMovies(userId: string): Promise<FavoriteMovie[]> {
     const { data, error } = await this.supabase
-      .from("favorite_movies")
+      .from("user_movies")
       .select("*")
       .eq("user_id", userId)
-      .order("added_at", { ascending: false });
-
+      .eq("is_favorite", true)
+      .order("updated_at", { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      user_id: row.user_id,
+      movie_id: row.movie_id,
+      added_at: row.updated_at,
+    }));
   }
 
-  async removeFromFavorites(userId: string, movieId: number) {
+  async removeFromFavorites(userId: string, movieId: string) {
     const { error } = await this.supabase
-      .from("favorite_movies")
-      .delete()
+      .from("user_movies")
+      .update({ is_favorite: false, updated_at: new Date().toISOString() })
       .eq("user_id", userId)
-      .eq("tmdb_id", movieId);
-
+      .eq("movie_id", movieId);
     if (error) throw error;
   }
 
-  async isMovieFavorite(userId: string, movieId: number): Promise<boolean> {
+  async isMovieFavorite(userId: string, movieId: string): Promise<boolean> {
     const { data, error } = await this.supabase
-      .from("favorite_movies")
+      .from("user_movies")
       .select("id")
       .eq("user_id", userId)
-      .eq("tmdb_id", movieId)
+      .eq("movie_id", movieId)
+      .eq("is_favorite", true)
       .single();
-
     if (error && error.code !== "PGRST116") throw error;
     return !!data;
   }
 
   async isMovieWatched(
     userId: string,
-    movieId: number,
+    movieId: string,
   ): Promise<WatchedMovie | null> {
     const { data, error } = await this.supabase
-      .from("watched_movies")
+      .from("user_movies")
       .select("*")
       .eq("user_id", userId)
-      .eq("tmdb_id", movieId)
+      .eq("movie_id", movieId)
+      .eq("is_watched", true)
       .single();
-
     if (error && error.code !== "PGRST116") throw error;
-    return data || null;
+    if (!data) return null;
+    return {
+      id: data.id,
+      user_id: data.user_id,
+      movie_id: data.movie_id,
+      rating: data.rating,
+      watched_at: data.watched_at ?? data.updated_at,
+    };
   }
 }

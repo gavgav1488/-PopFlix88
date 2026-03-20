@@ -9,11 +9,11 @@ interface MovieGridProps {
   showActions?: boolean;
   emptyMessage?: string;
   className?: string;
-  onToggleFavorite?: (movieId: number) => void;
-  onMarkAsWatched?: (movieId: number) => void;
-  getUserRating?: (movieId: number) => number | undefined;
-  isMovieFavorite?: (movieId: number) => boolean;
-  isMovieWatched?: (movieId: number) => boolean;
+  onToggleFavorite?: (movieId: string | number) => void;
+  onMarkAsWatched?: (movieId: string | number) => void;
+  getUserRating?: (movieId: string | number) => number | undefined;
+  isMovieFavorite?: (movieId: string | number) => boolean;
+  isMovieWatched?: (movieId: string | number) => boolean;
 }
 
 export function MovieGrid({

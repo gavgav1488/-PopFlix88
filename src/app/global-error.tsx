@@ -11,12 +11,11 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Логируем критическую ошибку
     console.error("Global error:", error);
   }, [error]);
 
   return (
-    <html>
+    <html lang="ru">
       <body>
         <div className="min-h-screen flex items-center justify-center p-4 bg-background text-foreground">
           <div className="w-full max-w-md text-center space-y-6">
@@ -50,6 +49,7 @@ export default function GlobalError({
 
             <div className="flex flex-col gap-2">
               <button
+                type="button"
                 onClick={reset}
                 className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
               >
@@ -57,7 +57,10 @@ export default function GlobalError({
                 Попробовать снова
               </button>
               <button
-                onClick={() => (window.location.href = "/")}
+                type="button"
+                onClick={() => {
+                  window.location.href = "/";
+                }}
                 className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 Перезагрузить приложение

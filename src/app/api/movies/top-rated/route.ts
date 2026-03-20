@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { tmdbClient } from "@/lib/tmdb/client";
+import { omdbClient } from "@/lib/omdb/client";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
 
-    const results = await tmdbClient.getTopRatedMovies(page);
+    const results = await omdbClient.getTopRatedMovies(page);
 
     return NextResponse.json(results);
   } catch (error) {

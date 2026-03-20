@@ -59,15 +59,15 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-8">
-          {[1, 2, 3].map((section) => (
+          {["popular", "top-rated", "now-playing"].map((section) => (
             <div key={section}>
-              <div className="h-8 bg-muted rounded w-48 mb-6"></div>
+              <div className="h-8 bg-muted rounded w-48 mb-6" />
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {["s1", "s2", "s3", "s4", "s5", "s6"].map((sk) => (
                   <div
-                    key={i}
+                    key={sk}
                     className="aspect-[2/3] bg-muted rounded-lg animate-pulse"
-                  ></div>
+                  />
                 ))}
               </div>
             </div>

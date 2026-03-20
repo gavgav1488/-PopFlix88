@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MovieGrid } from "@/components/movie/MovieGrid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,36 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  const handleSearch = useCallback(
+    async (searchQuery?: string) => {
+      const queryToSearch = searchQuery ?? query;
+      if (!queryToSearch.trim()) return;
+
+      try {
+        setLoading(true);
+        setHasSearched(true);
+
+        const response = await fetch(
+          `/api/movies/search?q=${encodeURIComponent(queryToSearch.trim())}`,
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setMovies(data.results || []);
+        } else {
+          console.error("Search error:", data.error);
+          setMovies([]);
+        }
+      } catch (error) {
+        console.error("Error searching movies:", error);
+        setMovies([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [query],
+  );
+
   useEffect(() => {
     const initialQuery = searchParams.get("q");
     if (initialQuery) {
@@ -22,33 +52,6 @@ export default function SearchPage() {
       handleSearch(initialQuery);
     }
   }, [searchParams, handleSearch]);
-
-  const handleSearch = async (searchQuery?: string) => {
-    const queryToSearch = searchQuery || query;
-    if (!queryToSearch.trim()) return;
-
-    try {
-      setLoading(true);
-      setHasSearched(true);
-
-      const response = await fetch(
-        `/api/movies/search?q=${encodeURIComponent(queryToSearch.trim())}`,
-      );
-      const data = await response.json();
-
-      if (response.ok) {
-        setMovies(data.results || []);
-      } else {
-        console.error("Search error:", data.error);
-        setMovies([]);
-      }
-    } catch (error) {
-      console.error("Error searching movies:", error);
-      setMovies([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -84,7 +87,7 @@ export default function SearchPage() {
 
       {loading && (
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Ищем фильмы...</p>
         </div>
       )}

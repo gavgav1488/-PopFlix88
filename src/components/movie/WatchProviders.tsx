@@ -5,11 +5,10 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { tmdbClient } from "@/lib/tmdb/client";
 import type { WatchProvider } from "@/types";
 
 interface WatchProvidersProps {
-  movieId: number;
+  movieId: string | number;
 }
 
 export function WatchProviders({ movieId }: WatchProvidersProps) {
@@ -105,12 +104,11 @@ export function WatchProviders({ movieId }: WatchProvidersProps) {
               {provider.logo_path ? (
                 <div className="relative w-12 h-12 rounded-lg overflow-hidden">
                   <Image
-                    src={
-                      tmdbClient.getImageURL(provider.logo_path, "w92") || ""
-                    }
+                    src={provider.logo_path}
                     alt={provider.provider_name}
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                 </div>
               ) : (

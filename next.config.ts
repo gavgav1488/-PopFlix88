@@ -25,11 +25,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "http",
-        hostname: "**.omdbapi.com",
+        hostname: "www.omdbapi.com",
       },
       {
         protocol: "https",
         hostname: "m.media-amazon.com",
+      },
+      {
+        protocol: "https",
+        hostname: "ia.media-imdb.com",
       },
     ],
   },

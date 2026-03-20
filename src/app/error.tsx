@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,15 +12,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function Error({
+export default function AppError({
   error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+
   useEffect(() => {
-    // Логируем ошибку в сервис мониторинга
     console.error("Application error:", error);
   }, [error]);
 
@@ -32,8 +34,7 @@ export default function Error({
           </div>
           <CardTitle className="text-xl">Произошла ошибка</CardTitle>
           <CardDescription>
-            Что-то пошло не так при загрузке этой страницы. Попробуйте обновить
-            страницу.
+            Что-то пошло не так при загрузке этой страницы.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -59,7 +60,7 @@ export default function Error({
             </Button>
             <Button
               variant="outline"
-              onClick={() => (window.location.href = "/dashboard")}
+              onClick={() => router.push("/dashboard")}
               className="w-full"
             >
               <Home className="mr-2 h-4 w-4" />

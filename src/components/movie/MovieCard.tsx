@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { tmdbClient } from "@/lib/tmdb/client";
+import { omdbClient } from "@/lib/omdb/client";
 import type { Movie } from "@/types";
 
 interface MovieCardProps {
@@ -16,8 +16,8 @@ interface MovieCardProps {
   userRating?: number;
   isFavorite?: boolean;
   isWatched?: boolean;
-  onToggleFavorite?: (movieId: number) => void;
-  onMarkAsWatched?: (movieId: number) => void;
+  onToggleFavorite?: (movieId: string | number) => void;
+  onMarkAsWatched?: (movieId: string | number) => void;
 }
 
 export function MovieCard({
@@ -32,7 +32,7 @@ export function MovieCard({
   const [imageError, setImageError] = useState(false);
 
   const posterUrl = movie.poster_path
-    ? tmdbClient.getImageURL(movie.poster_path, "w342")
+    ? omdbClient.getImageURL(movie.poster_path)
     : null;
 
   const releaseYear = movie.release_date

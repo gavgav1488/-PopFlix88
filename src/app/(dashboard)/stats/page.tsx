@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart3, Calendar, Clock, Film, Star, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -13,7 +13,7 @@ import {
 
 interface UserStats {
   totalWatched: number;
-  totalWatchTime: number; // в минутах
+  totalWatchTime: number;
   averageRating: number;
   favoriteGenres: Array<{ name: string; count: number }>;
   favoriteActors: Array<{ name: string; count: number }>;
@@ -22,20 +22,17 @@ interface UserStats {
   monthlyActivity: Array<{ month: string; count: number }>;
 }
 
+const SKELETON_ITEMS = ["a", "b", "c", "d"];
+
 export default function StatsPage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUserStats();
-  }, [fetchUserStats]);
-
-  const fetchUserStats = async () => {
+  const fetchUserStats = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch("/api/user/stats");
       const data = await response.json();
-
       if (response.ok) {
         setStats(data);
       } else {
@@ -46,19 +43,18 @@ export default function StatsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchUserStats();
+  }, [fetchUserStats]);
 
   const formatWatchTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `${days} дн. ${hours % 24} ч.`;
-    } else if (hours > 0) {
-      return `${hours} ч. ${minutes % 60} мин.`;
-    } else {
-      return `${minutes} мин.`;
-    }
+    if (days > 0) return `${days} дн. ${hours % 24} ч.`;
+    if (hours > 0) return `${hours} ч. ${minutes % 60} мин.`;
+    return `${minutes} мин.`;
   };
 
   if (loading) {
@@ -71,14 +67,14 @@ export default function StatsPage() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+          {SKELETON_ITEMS.map((key) => (
+            <Card key={key} className="animate-pulse">
               <CardHeader className="pb-2">
-                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded w-3/4" />
               </CardHeader>
               <CardContent>
-                <div className="h-8 bg-muted rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-full"></div>
+                <div className="h-8 bg-muted rounded w-1/2 mb-2" />
+                <div className="h-3 bg-muted rounded w-full" />
               </CardContent>
             </Card>
           ))}
@@ -101,6 +97,11 @@ export default function StatsPage() {
     );
   }
 
+  const maxMonthlyCount = Math.max(
+    ...stats.monthlyActivity.map((m) => m.count),
+    1,
+  );
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -110,7 +111,6 @@ export default function StatsPage() {
         </p>
       </div>
 
-      {/* Основные метрики */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -166,10 +166,7 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.monthlyActivity.reduce(
-                (sum, month) => sum + month.count,
-                0,
-              )}
+              {stats.monthlyActivity.reduce((sum, m) => sum + m.count, 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Фильмов за последние 12 месяцев
@@ -178,7 +175,6 @@ export default function StatsPage() {
         </Card>
       </div>
 
-      {/* Любимые жанры */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -203,7 +199,6 @@ export default function StatsPage() {
         </CardContent>
       </Card>
 
-      {/* Любимые актёры и режиссёры */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -266,7 +261,6 @@ export default function StatsPage() {
         </Card>
       </div>
 
-      {/* Статистика по годам */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -274,7 +268,7 @@ export default function StatsPage() {
             Любимые годы выпуска
           </CardTitle>
           <CardDescription>
-            Распределение просмотренных фильмов по годам выпуска
+            Распределение просмотренных фильмов по годам
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -294,7 +288,6 @@ export default function StatsPage() {
         </CardContent>
       </Card>
 
-      {/* Месячная активность */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -318,7 +311,7 @@ export default function StatsPage() {
                     <div
                       className="bg-primary h-2 rounded-full transition-all duration-300"
                       style={{
-                        width: `${Math.max(5, (month.count / Math.max(...stats.monthlyActivity.map((m) => m.count))) * 100)}%`,
+                        width: `${Math.max(5, (month.count / maxMonthlyCount) * 100)}%`,
                       }}
                     />
                   </div>

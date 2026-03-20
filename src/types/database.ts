@@ -64,92 +64,69 @@ export interface Database {
           updated_at?: string;
         };
       };
-      watched_movies: {
+      user_movies: {
         Row: {
           id: string;
           user_id: string;
-          tmdb_id: number;
-          rating: number;
-          watched_at: string;
-          notes: string | null;
+          movie_id: string;
+          is_watched: boolean;
+          is_favorite: boolean;
+          rating: number | null;
+          watched_at: string | null;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          tmdb_id: number;
-          rating: number;
-          watched_at?: string;
-          notes?: string | null;
+          movie_id: string;
+          is_watched?: boolean;
+          is_favorite?: boolean;
+          rating?: number | null;
+          watched_at?: string | null;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          tmdb_id?: number;
-          rating?: number;
-          watched_at?: string;
-          notes?: string | null;
-        };
-      };
-      favorite_movies: {
-        Row: {
-          id: string;
-          user_id: string;
-          tmdb_id: number;
-          added_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          tmdb_id: number;
-          added_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          tmdb_id?: number;
-          added_at?: string;
+          movie_id?: string;
+          is_watched?: boolean;
+          is_favorite?: boolean;
+          rating?: number | null;
+          watched_at?: string | null;
+          updated_at?: string;
         };
       };
       movies_cache: {
         Row: {
-          tmdb_id: number;
+          movie_id: string;
           title: string;
           overview: string | null;
           poster_path: string | null;
-          backdrop_path: string | null;
           release_date: string | null;
           runtime: number | null;
           genres: Json | null;
-          cast: Json | null;
-          crew: Json | null;
           vote_average: number | null;
           cached_at: string;
         };
         Insert: {
-          tmdb_id: number;
+          movie_id: string;
           title: string;
           overview?: string | null;
           poster_path?: string | null;
-          backdrop_path?: string | null;
           release_date?: string | null;
           runtime?: number | null;
           genres?: Json | null;
-          cast?: Json | null;
-          crew?: Json | null;
           vote_average?: number | null;
           cached_at?: string;
         };
         Update: {
-          tmdb_id?: number;
+          movie_id?: string;
           title?: string;
           overview?: string | null;
           poster_path?: string | null;
-          backdrop_path?: string | null;
           release_date?: string | null;
           runtime?: number | null;
           genres?: Json | null;
-          cast?: Json | null;
-          crew?: Json | null;
           vote_average?: number | null;
           cached_at?: string;
         };

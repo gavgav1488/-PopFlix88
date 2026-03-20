@@ -1,6 +1,5 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   _request: NextRequest,
@@ -8,31 +7,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options),
-              );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      },
-    );
+    const supabase = await createClient();
 
-    // Проверяем аутентификацию
     const {
       data: { user },
       error: authError,
@@ -42,16 +18,14 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Получаем данные пользователя о фильме
     const { data: userMovie, error } = await supabase
       .from("user_movies")
       .select("*")
       .eq("user_id", user.id)
-      .eq("movie_id", parseInt(id, 10))
+      .eq("movie_id", id)
       .single();
 
     if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows returned
       console.error("Error fetching user movie:", error);
       return NextResponse.json(
         { error: "Failed to fetch user movie data" },
@@ -59,7 +33,6 @@ export async function GET(
       );
     }
 
-    // Если записи нет, возвращаем значения по умолчанию
     if (!userMovie) {
       return NextResponse.json({
         rating: null,

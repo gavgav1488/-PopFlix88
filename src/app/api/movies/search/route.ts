@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { tmdbClient } from "@/lib/tmdb/client";
+import { omdbClient } from "@/lib/omdb/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const results = await tmdbClient.searchMovies(query, page);
+    const results = await omdbClient.searchMovies(query, page);
 
     return NextResponse.json(results);
   } catch (error) {

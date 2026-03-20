@@ -28,8 +28,20 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { type LoginFormData, loginSchema } from "@/lib/validations/auth";
 
+function translateAuthError(message: string): string {
+  if (message.includes("Email not confirmed"))
+    return "Email не подтверждён. Проверьте почту или обратитесь к администратору.";
+  if (message.includes("Invalid login credentials"))
+    return "Неверный email или пароль.";
+  if (message.includes("Too many requests"))
+    return "Слишком много попыток. Попробуйте позже.";
+  if (message.includes("User not found")) return "Пользователь не найден.";
+  return message;
+}
+
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const { signIn } = useAuth();
   const router = useRouter();
 
@@ -44,11 +56,12 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
+      setFormError(null);
       await signIn(data.email, data.password);
       router.push("/dashboard");
     } catch (error) {
-      console.error("Login error:", error);
-      // Ошибка уже обрабатывается в useAuth
+      const message = error instanceof Error ? error.message : "Ошибка входа";
+      setFormError(translateAuthError(message));
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +118,12 @@ export function LoginForm() {
                 </FormItem>
               )}
             />
+
+            {formError && (
+              <p className="text-sm text-destructive text-center">
+                {formError}
+              </p>
+            )}
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">

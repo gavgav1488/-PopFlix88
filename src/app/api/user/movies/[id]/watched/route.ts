@@ -1,6 +1,5 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
   request: NextRequest,
@@ -9,32 +8,8 @@ export async function POST(
   try {
     const { id } = await params;
     const { is_watched } = await request.json();
+    const supabase = await createClient();
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options),
-              );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      },
-    );
-
-    // Проверяем аутентификацию
     const {
       data: { user },
       error: authError,
@@ -44,22 +19,17 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const movieId = parseInt(id, 10);
-
-    // Используем upsert для создания или обновления записи
     const { data, error } = await supabase
       .from("user_movies")
       .upsert(
         {
           user_id: user.id,
-          movie_id: movieId,
+          movie_id: id,
           is_watched,
           watched_at: is_watched ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
         },
-        {
-          onConflict: "user_id,movie_id",
-        },
+        { onConflict: "user_id,movie_id" },
       )
       .select()
       .single();
