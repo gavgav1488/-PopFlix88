@@ -63,5 +63,5 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Обновлена структура проекта (перемещено из popflix/ в корень)
 
 ## Контроль изменений
-- **last_checked_commit:** 095c13b
+- **last_checked_commit:** a143aaf
 - **Последняя проверка:** 2026-03-20
