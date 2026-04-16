@@ -10,7 +10,7 @@ export interface User {
 export interface UserPreferences {
   id: string;
   user_id: string;
-  favorite_genres: number[];
+  favorite_genres: string[];
   favorite_actors: string[];
   favorite_directors: string[];
 }

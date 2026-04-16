@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 
 export async function POST(
   request: NextRequest,
@@ -27,19 +28,18 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const payload: Database["public"]["Tables"]["user_movies"]["Insert"] = {
+      user_id: user.id,
+      movie_id: id,
+      rating,
+      is_watched: rating !== null,
+      watched_at: rating !== null ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    };
+
     const { data, error } = await supabase
       .from("user_movies")
-      .upsert(
-        {
-          user_id: user.id,
-          movie_id: id,
-          rating,
-          is_watched: rating !== null ? true : undefined,
-          watched_at: rating !== null ? new Date().toISOString() : undefined,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,movie_id" },
-      )
+      .upsert(payload as never, { onConflict: "user_id,movie_id" })
       .select()
       .single();
 

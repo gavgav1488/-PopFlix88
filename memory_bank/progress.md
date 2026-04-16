@@ -1,17 +1,19 @@
 # Progress: PopFlix
 
 ## Статус проекта
-🟡 В разработке — ~42% (см. Project Deliverables в projectbrief.md)
+🟡 В разработке — ~52% (см. Project Deliverables в projectbrief.md)
 
 ## Что готово
 - ✅ Next.js проект инициализирован и настроен
 - ✅ Supabase Auth работает (email подтверждён)
 - ✅ OMDb API интегрирован (замена TMDB)
 - ✅ Все API routes переписаны на OMDb
-- ✅ Biome lint: 57 файлов, 0 ошибок
+- ✅ Biome lint: 63 файла, 0 ошибок
+- ✅ `bun run build` проходит без ошибок TypeScript
 - ✅ Memory Bank инициализирован и синхронизирован
 - ✅ LoginForm: отображение ошибок на русском
 - ✅ OnboardingForm: сохранение через API route, исправлена кнопка
+- ✅ Таблицы profiles и user_preferences созданы в Supabase
 
 ## Известные проблемы (Known Issues)
 1. OMDb API: 1000 req/day лимит на бесплатном тарифе
@@ -37,6 +39,19 @@ CREATE POLICY "Users can manage own movies" ON public.user_movies
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 ```
+
+### 2026-03-24
+- Созданы миграции для таблиц profiles и user_preferences
+- Таблицы применены к Supabase
+- Обновлены типы database.ts (favorite_genres: number[] → string[])
+- Прогресс проекта: ~52%
+
+### 2026-04-16
+- Добита незавершённая типизация Supabase в API routes и `src/lib/supabase/service.ts`
+- Исправлен конфликт типов `favorite_genres`: `string[]` синхронизирован в `database.ts` и `src/types/index.ts`
+- Исправлен `upsert` предпочтений через `onConflict: "user_id"`
+- В `OnboardingForm` возвращена согласованная блокировка кнопки без выбранных жанров
+- Проверено: `bunx biome check --write ...` и `bun run build`
 
 ### 2026-03-20 (сессия 4)
 - Создан `/api/user/movies/favorites` — API route для избранного
@@ -76,5 +91,5 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Обновлена структура проекта (перемещено из popflix/ в корень)
 
 ## Контроль изменений
-- **last_checked_commit:** 60ebaba
-- **Последняя проверка:** 2026-03-20
+- **last_checked_commit:** 1c2e085b3c336013ca70992a18bfede135adbba0
+- **Последняя проверка:** 2026-04-16

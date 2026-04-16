@@ -39,7 +39,7 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          favorite_genres: number[];
+          favorite_genres: string[];
           favorite_actors: string[];
           favorite_directors: string[];
           created_at: string;
@@ -48,7 +48,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          favorite_genres?: number[];
+          favorite_genres?: string[];
           favorite_actors?: string[];
           favorite_directors?: string[];
           created_at?: string;
@@ -57,7 +57,7 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
-          favorite_genres?: number[];
+          favorite_genres?: string[];
           favorite_actors?: string[];
           favorite_directors?: string[];
           created_at?: string;

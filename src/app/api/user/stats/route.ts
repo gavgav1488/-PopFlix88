@@ -2,6 +2,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { omdbClient } from "@/lib/omdb/client";
 import { createClient } from "@/lib/supabase/server";
 
+interface WatchedMovieEntry {
+  movie_id: string;
+  rating: number | null;
+  watched_at: string | null;
+  is_favorite: boolean;
+}
+
 export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -29,7 +36,9 @@ export async function GET(_request: NextRequest) {
       );
     }
 
-    if (!watchedMovies || watchedMovies.length === 0) {
+    const watchedEntries = (watchedMovies ?? []) as WatchedMovieEntry[];
+
+    if (watchedEntries.length === 0) {
       return NextResponse.json({
         totalWatched: 0,
         totalWatchTime: 0,
@@ -44,7 +53,7 @@ export async function GET(_request: NextRequest) {
 
     // Получаем детали фильмов через OMDb
     const movieDetails = await Promise.all(
-      watchedMovies.map(async (entry) => {
+      watchedEntries.map(async (entry) => {
         try {
           return await omdbClient.getMovieDetails(String(entry.movie_id));
         } catch {
@@ -55,13 +64,13 @@ export async function GET(_request: NextRequest) {
 
     const validMovies = movieDetails.filter((m) => m !== null);
 
-    const totalWatched = watchedMovies.length;
+    const totalWatched = watchedEntries.length;
     const totalWatchTime = validMovies.reduce(
       (sum, movie) => sum + (movie.runtime || 0),
       0,
     );
 
-    const ratings = watchedMovies
+    const ratings = watchedEntries
       .filter((m) => m.rating !== null)
       .map((m) => m.rating as number);
     const averageRating =
@@ -130,7 +139,7 @@ export async function GET(_request: NextRequest) {
       });
       monthlyCount[key] = 0;
     }
-    for (const movie of watchedMovies) {
+    for (const movie of watchedEntries) {
       if (movie.watched_at) {
         const key = new Date(movie.watched_at).toLocaleDateString("ru-RU", {
           year: "numeric",

@@ -4,7 +4,13 @@ import type {
   UserPreferences,
   WatchedMovie,
 } from "@/types";
+import type { Database } from "@/types/database";
 import { createClient } from "./client";
+
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type UserPreferencesRow =
+  Database["public"]["Tables"]["user_preferences"]["Row"];
+type UserMovieRow = Database["public"]["Tables"]["user_movies"]["Row"];
 
 export class SupabaseService {
   private supabase = createClient();
@@ -51,17 +57,31 @@ export class SupabaseService {
       .eq("id", userId)
       .single();
 
+    const profile = data as ProfileRow | null;
+
     if (error) {
       if (error.code === "PGRST116") return null;
       throw error;
     }
-    return data;
+
+    if (!profile) {
+      return null;
+    }
+
+    return {
+      id: profile.id,
+      email: profile.email,
+      full_name: profile.full_name ?? undefined,
+      avatar_url: profile.avatar_url ?? undefined,
+    };
   }
 
   async updateProfile(userId: string, updates: Partial<User>) {
+    const payload: Database["public"]["Tables"]["profiles"]["Update"] = updates;
+
     const { data, error } = await this.supabase
       .from("profiles")
-      .update(updates)
+      .update(payload as never)
       .eq("id", userId)
       .select()
       .single();
@@ -77,20 +97,28 @@ export class SupabaseService {
       .eq("user_id", userId)
       .single();
 
+    const preferences = data as UserPreferencesRow | null;
+
     if (error) {
       if (error.code === "PGRST116") return null;
       throw error;
     }
-    return data;
+    return preferences;
   }
 
   async updatePreferences(
     userId: string,
     preferences: Omit<UserPreferences, "id" | "user_id">,
   ) {
+    const payload: Database["public"]["Tables"]["user_preferences"]["Insert"] =
+      {
+        user_id: userId,
+        ...preferences,
+      };
+
     const { data, error } = await this.supabase
       .from("user_preferences")
-      .upsert({ user_id: userId, ...preferences })
+      .upsert(payload as never, { onConflict: "user_id" })
       .select()
       .single();
     if (error) throw error;
@@ -103,19 +131,18 @@ export class SupabaseService {
     movieId: string,
     rating: number | null,
   ) {
+    const payload: Database["public"]["Tables"]["user_movies"]["Insert"] = {
+      user_id: userId,
+      movie_id: movieId,
+      is_watched: true,
+      rating,
+      watched_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data, error } = await this.supabase
       .from("user_movies")
-      .upsert(
-        {
-          user_id: userId,
-          movie_id: movieId,
-          is_watched: true,
-          rating,
-          watched_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,movie_id" },
-      )
+      .upsert(payload as never, { onConflict: "user_id,movie_id" })
       .select()
       .single();
     if (error) throw error;
@@ -130,7 +157,10 @@ export class SupabaseService {
       .eq("is_watched", true)
       .order("watched_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map((row) => ({
+
+    const rows = (data ?? []) as UserMovieRow[];
+
+    return rows.map((row) => ({
       id: row.id,
       user_id: row.user_id,
       movie_id: row.movie_id,
@@ -140,13 +170,15 @@ export class SupabaseService {
   }
 
   async removeWatchedMovie(userId: string, movieId: string) {
+    const payload: Database["public"]["Tables"]["user_movies"]["Update"] = {
+      is_watched: false,
+      watched_at: null,
+      updated_at: new Date().toISOString(),
+    };
+
     const { error } = await this.supabase
       .from("user_movies")
-      .update({
-        is_watched: false,
-        watched_at: null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(payload as never)
       .eq("user_id", userId)
       .eq("movie_id", movieId);
     if (error) throw error;
@@ -154,17 +186,16 @@ export class SupabaseService {
 
   // Избранное (через user_movies)
   async addToFavorites(userId: string, movieId: string) {
+    const payload: Database["public"]["Tables"]["user_movies"]["Insert"] = {
+      user_id: userId,
+      movie_id: movieId,
+      is_favorite: true,
+      updated_at: new Date().toISOString(),
+    };
+
     const { data, error } = await this.supabase
       .from("user_movies")
-      .upsert(
-        {
-          user_id: userId,
-          movie_id: movieId,
-          is_favorite: true,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,movie_id" },
-      )
+      .upsert(payload as never, { onConflict: "user_id,movie_id" })
       .select()
       .single();
     if (error) throw error;
@@ -179,7 +210,10 @@ export class SupabaseService {
       .eq("is_favorite", true)
       .order("updated_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map((row) => ({
+
+    const rows = (data ?? []) as UserMovieRow[];
+
+    return rows.map((row) => ({
       id: row.id,
       user_id: row.user_id,
       movie_id: row.movie_id,
@@ -188,9 +222,14 @@ export class SupabaseService {
   }
 
   async removeFromFavorites(userId: string, movieId: string) {
+    const payload: Database["public"]["Tables"]["user_movies"]["Update"] = {
+      is_favorite: false,
+      updated_at: new Date().toISOString(),
+    };
+
     const { error } = await this.supabase
       .from("user_movies")
-      .update({ is_favorite: false, updated_at: new Date().toISOString() })
+      .update(payload as never)
       .eq("user_id", userId)
       .eq("movie_id", movieId);
     if (error) throw error;
@@ -219,14 +258,17 @@ export class SupabaseService {
       .eq("movie_id", movieId)
       .eq("is_watched", true)
       .single();
+
+    const watchedMovie = data as UserMovieRow | null;
+
     if (error && error.code !== "PGRST116") throw error;
-    if (!data) return null;
+    if (!watchedMovie) return null;
     return {
-      id: data.id,
-      user_id: data.user_id,
-      movie_id: data.movie_id,
-      rating: data.rating,
-      watched_at: data.watched_at ?? data.updated_at,
+      id: watchedMovie.id,
+      user_id: watchedMovie.user_id,
+      movie_id: watchedMovie.movie_id,
+      rating: watchedMovie.rating,
+      watched_at: watchedMovie.watched_at ?? watchedMovie.updated_at,
     };
   }
 }

@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+interface UserMovieState {
+  rating: number | null;
+  is_favorite: boolean;
+  is_watched: boolean;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -25,6 +31,8 @@ export async function GET(
       .eq("movie_id", id)
       .single();
 
+    const movieState = userMovie as UserMovieState | null;
+
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching user movie:", error);
       return NextResponse.json(
@@ -33,7 +41,7 @@ export async function GET(
       );
     }
 
-    if (!userMovie) {
+    if (!movieState) {
       return NextResponse.json({
         rating: null,
         is_favorite: false,
@@ -42,9 +50,9 @@ export async function GET(
     }
 
     return NextResponse.json({
-      rating: userMovie.rating,
-      is_favorite: userMovie.is_favorite,
-      is_watched: userMovie.is_watched,
+      rating: movieState.rating,
+      is_favorite: movieState.is_favorite,
+      is_watched: movieState.is_watched,
     });
   } catch (error) {
     console.error("Error in user movie API:", error);

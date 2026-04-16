@@ -16,7 +16,7 @@ import type { Genre } from "@/types";
 
 export function OnboardingForm() {
   const [genres, setGenres] = useState<Genre[]>([]);
-  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGenres, setIsLoadingGenres] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,11 +40,11 @@ export function OnboardingForm() {
     fetchGenres();
   }, []);
 
-  const handleGenreToggle = (genreId: number) => {
+  const handleGenreToggle = (genreName: string) => {
     setSelectedGenres((prev) =>
-      prev.includes(genreId)
-        ? prev.filter((id) => id !== genreId)
-        : [...prev, genreId],
+      prev.includes(genreName)
+        ? prev.filter((name) => name !== genreName)
+        : [...prev, genreName],
     );
   };
 
@@ -118,10 +118,10 @@ export function OnboardingForm() {
               <Badge
                 key={genre.id}
                 variant={
-                  selectedGenres.includes(genre.id) ? "default" : "outline"
+                  selectedGenres.includes(genre.name) ? "default" : "outline"
                 }
                 className="cursor-pointer p-3 text-center justify-center hover:bg-primary/10 transition-colors"
-                onClick={() => handleGenreToggle(genre.id)}
+                onClick={() => handleGenreToggle(genre.name)}
               >
                 {genre.name}
               </Badge>
@@ -132,6 +132,12 @@ export function OnboardingForm() {
         {selectedGenres.length > 0 && (
           <div className="text-center text-sm text-muted-foreground">
             Выбрано жанров: {selectedGenres.length}
+          </div>
+        )}
+
+        {selectedGenres.length === 0 && (
+          <div className="text-center text-sm text-muted-foreground">
+            Выберите хотя бы один жанр
           </div>
         )}
 

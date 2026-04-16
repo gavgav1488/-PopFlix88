@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -57,18 +58,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { favorite_genres, favorite_actors, favorite_directors } = body;
 
+    const payload: Database["public"]["Tables"]["user_preferences"]["Insert"] =
+      {
+        user_id: user.id,
+        favorite_genres: favorite_genres ?? [],
+        favorite_actors: favorite_actors ?? [],
+        favorite_directors: favorite_directors ?? [],
+        updated_at: new Date().toISOString(),
+      };
+
     const { data: preferences, error } = await supabase
       .from("user_preferences")
-      .upsert(
-        {
-          user_id: user.id,
-          favorite_genres: favorite_genres ?? [],
-          favorite_actors: favorite_actors ?? [],
-          favorite_directors: favorite_directors ?? [],
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      )
+      .upsert(payload as never, { onConflict: "user_id" })
       .select()
       .single();
 
