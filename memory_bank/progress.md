@@ -8,6 +8,7 @@
 - ✅ Supabase Auth работает (email подтверждён)
 - ✅ OMDb API интегрирован (замена TMDB)
 - ✅ Все API routes переписаны на OMDb
+- ✅ Dashboard показывает персональные рекомендации по сохранённым жанрам
 - ✅ Biome lint: 63 файла, 0 ошибок
 - ✅ `bun run build` проходит без ошибок TypeScript
 - ✅ Memory Bank инициализирован и синхронизирован
@@ -52,6 +53,8 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Исправлен `upsert` предпочтений через `onConflict: "user_id"`
 - В `OnboardingForm` возвращена согласованная блокировка кнопки без выбранных жанров
 - Проверено: `bunx biome check --write ...` и `bun run build`
+- Добавлен `/api/user/recommendations` для персональных рекомендаций на основе любимых жанров
+- `dashboard` теперь показывает персональную подборку с fallback на общие рекомендации
 
 ### 2026-03-20 (сессия 4)
 - Создан `/api/user/movies/favorites` — API route для избранного
@@ -91,5 +94,5 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Обновлена структура проекта (перемещено из popflix/ в корень)
 
 ## Контроль изменений
-- **last_checked_commit:** 1c2e085b3c336013ca70992a18bfede135adbba0
+- **last_checked_commit:** acabe57
 - **Последняя проверка:** 2026-04-16

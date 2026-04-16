@@ -67,6 +67,7 @@ src/
 | `/api/movies/[id]` | Данные фильма |
 | `/api/movies/random` | Случайные фильмы |
 | `/api/user/preferences` | Предпочтения пользователя |
+| `/api/user/recommendations` | Персональные рекомендации по жанрам |
 | `/api/migrate` | Миграция просмотренных |
 
 ## База данных (Supabase)

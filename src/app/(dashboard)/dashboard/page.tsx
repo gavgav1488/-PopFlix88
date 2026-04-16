@@ -5,6 +5,13 @@ import { MovieGrid } from "@/components/movie/MovieGrid";
 import type { Movie } from "@/types";
 
 export default function DashboardPage() {
+  const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
+  const [recommendationSource, setRecommendationSource] = useState<
+    "preferences" | "fallback" | null
+  >(null);
+  const [recommendationGenres, setRecommendationGenres] = useState<string[]>(
+    [],
+  );
   const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
   const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
   const [nowPlayingMovies, setNowPlayingMovies] = useState<Movie[]>([]);
@@ -15,12 +22,28 @@ export default function DashboardPage() {
       try {
         setLoading(true);
 
-        const [popularResponse, topRatedResponse, nowPlayingResponse] =
-          await Promise.all([
-            fetch("/api/movies/popular"),
-            fetch("/api/movies/top-rated"),
-            fetch("/api/movies/now-playing"),
-          ]);
+        const [
+          recommendationsResponse,
+          popularResponse,
+          topRatedResponse,
+          nowPlayingResponse,
+        ] = await Promise.all([
+          fetch("/api/user/recommendations?limit=12"),
+          fetch("/api/movies/popular"),
+          fetch("/api/movies/top-rated"),
+          fetch("/api/movies/now-playing"),
+        ]);
+
+        if (recommendationsResponse.ok) {
+          const recommendationsData = await recommendationsResponse.json();
+          setRecommendedMovies(recommendationsData.results?.slice(0, 12) || []);
+          setRecommendationSource(recommendationsData.source || null);
+          setRecommendationGenres(recommendationsData.basedOn || []);
+        } else {
+          setRecommendedMovies([]);
+          setRecommendationSource(null);
+          setRecommendationGenres([]);
+        }
 
         if (popularResponse.ok) {
           const popularData = await popularResponse.json();
@@ -84,11 +107,25 @@ export default function DashboardPage() {
           Добро пожаловать в PopFlix! 🍿
         </h1>
         <p className="text-xl text-muted-foreground">
-          Откройте для себя новые фильмы
+          {recommendationSource === "preferences"
+            ? "Подборка, собранная по вашим любимым жанрам"
+            : "Откройте для себя новые фильмы"}
         </p>
       </div>
 
       <div className="space-y-12">
+        {recommendedMovies.length > 0 && (
+          <MovieGrid
+            movies={recommendedMovies}
+            title={
+              recommendationSource === "preferences"
+                ? `✨ Рекомендуем по жанрам: ${recommendationGenres.join(", ")}`
+                : "✨ Рекомендуем посмотреть"
+            }
+            showActions={true}
+          />
+        )}
+
         {popularMovies.length > 0 && (
           <MovieGrid
             movies={popularMovies}
