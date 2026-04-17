@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { MovieGrid } from "@/components/movie/MovieGrid";
+import { fetchWithRetry } from "@/lib/fetch/client";
 import type { Movie } from "@/types";
+
+type MoviesResponse = {
+  results?: Movie[];
+  source?: "preferences" | "fallback" | null;
+  basedOn?: string[];
+};
 
 export default function DashboardPage() {
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
@@ -27,37 +34,74 @@ export default function DashboardPage() {
           popularResponse,
           topRatedResponse,
           nowPlayingResponse,
-        ] = await Promise.all([
-          fetch("/api/user/recommendations?limit=12"),
-          fetch("/api/movies/popular"),
-          fetch("/api/movies/top-rated"),
-          fetch("/api/movies/now-playing"),
+        ] = await Promise.allSettled([
+          fetchWithRetry("/api/user/recommendations?limit=12"),
+          fetchWithRetry("/api/movies/popular"),
+          fetchWithRetry("/api/movies/top-rated"),
+          fetchWithRetry("/api/movies/now-playing"),
         ]);
 
-        if (recommendationsResponse.ok) {
-          const recommendationsData = await recommendationsResponse.json();
+        if (
+          recommendationsResponse.status === "fulfilled" &&
+          recommendationsResponse.value.ok
+        ) {
+          const recommendationsData =
+            (await recommendationsResponse.value.json()) as MoviesResponse;
           setRecommendedMovies(recommendationsData.results?.slice(0, 12) || []);
           setRecommendationSource(recommendationsData.source || null);
           setRecommendationGenres(recommendationsData.basedOn || []);
         } else {
+          console.error(
+            "Recommendations request failed",
+            recommendationsResponse.status === "fulfilled"
+              ? recommendationsResponse.value.status
+              : recommendationsResponse.reason,
+          );
           setRecommendedMovies([]);
           setRecommendationSource(null);
           setRecommendationGenres([]);
         }
 
-        if (popularResponse.ok) {
-          const popularData = await popularResponse.json();
+        if (
+          popularResponse.status === "fulfilled" &&
+          popularResponse.value.ok
+        ) {
+          const popularData =
+            (await popularResponse.value.json()) as MoviesResponse;
           setPopularMovies(popularData.results?.slice(0, 12) || []);
+        } else if (popularResponse.status !== "fulfilled") {
+          console.error(
+            "Popular movies request failed",
+            popularResponse.reason,
+          );
         }
 
-        if (topRatedResponse.ok) {
-          const topRatedData = await topRatedResponse.json();
+        if (
+          topRatedResponse.status === "fulfilled" &&
+          topRatedResponse.value.ok
+        ) {
+          const topRatedData =
+            (await topRatedResponse.value.json()) as MoviesResponse;
           setTopRatedMovies(topRatedData.results?.slice(0, 12) || []);
+        } else if (topRatedResponse.status !== "fulfilled") {
+          console.error(
+            "Top rated movies request failed",
+            topRatedResponse.reason,
+          );
         }
 
-        if (nowPlayingResponse.ok) {
-          const nowPlayingData = await nowPlayingResponse.json();
+        if (
+          nowPlayingResponse.status === "fulfilled" &&
+          nowPlayingResponse.value.ok
+        ) {
+          const nowPlayingData =
+            (await nowPlayingResponse.value.json()) as MoviesResponse;
           setNowPlayingMovies(nowPlayingData.results?.slice(0, 12) || []);
+        } else if (nowPlayingResponse.status !== "fulfilled") {
+          console.error(
+            "Now playing request failed",
+            nowPlayingResponse.reason,
+          );
         }
       } catch (error) {
         console.error("Error fetching movies:", error);

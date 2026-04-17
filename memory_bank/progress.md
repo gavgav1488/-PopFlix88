@@ -56,6 +56,31 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Добавлен `/api/user/recommendations` для персональных рекомендаций на основе любимых жанров
 - `dashboard` теперь показывает персональную подборку с fallback на общие рекомендации
 
+### 2026-04-17
+- Регистрация упрощена под продуктовый сценарий без подтверждения email: добавлен серверный `POST /api/auth/register` через Supabase Admin API, после signup выполняется автоматический вход и переход на `/onboarding`
+- Форма регистрации упрощена до `имя + email + пароль`, логика подтверждения email убрана из UI и UX авторизации
+- Проверено: `bunx biome check --write "src/app/api/auth/register/route.ts" "src/lib/validations/auth.ts" "src/components/auth/RegisterForm.tsx" "src/components/auth/LoginForm.tsx"` и `bun run build`
+- Исправлен флоу регистрации пользователя: `fullName` больше не ломает валидацию при пустом значении, `signUp` возвращает корректные `user/session`, а переход после регистрации зависит от фактического наличия сессии
+- Улучшен UX auth: `RegisterForm` показывает переведённые ошибки регистрации, `LoginForm` показывает сообщение после успешного signup с подтверждением email
+- Проверено: `bunx biome check --write "src/lib/validations/auth.ts" "src/lib/supabase/service.ts" "src/hooks/useAuth.tsx" "src/components/auth/RegisterForm.tsx" "src/components/auth/LoginForm.tsx"` и `bun run build`
+- Исправлена ошибка `Runtime AbortError: Lock broken by another request with the 'steal' option`: browser Supabase client переведён на локальный in-memory auth lock вместо конфликтующего браузерного lock API
+- Полностью убрано техническое логирование из `fetchWithRetry`: helper больше не пишет `Client fetch failed`, а просто пробрасывает ошибку вызывающему коду
+- Убран оставшийся console noise для внутренних запросов `@supabase/auth-js`: retry-helper теперь умеет работать в тихом режиме через `suppressErrorLog`, а Supabase browser client использует именно его
+- Исправлен источник stack trace из `@supabase/auth-js`: browser Supabase client теперь использует кастомный `global.fetch` с ретраем и fallback-ответом `503`, чтобы network failures не падали сырым `TypeError` во время token refresh
+- Добавлен `src/lib/fetch/client.ts`: единый клиентский `fetchWithRetry` с диагностикой сетевых падений и повтором запроса при browser-level `TypeError`
+- На `fetchWithRetry` переведены основные клиентские экраны и действия пользователя, чтобы локальные сетевые сбои не превращались в сырые `Failed to fetch` без контекста
+- Устранён основной источник дублирующихся browser auth-запросов: `useAuth` переведён на контекстный `AuthProvider`, подключённый в `src/app/layout.tsx`
+- Начальная клиентская проверка авторизации переведена с `supabase.auth.getUser()` на `supabase.auth.getSession()`, чтобы не делать лишний сетевой запрос при каждом потребителе auth-состояния
+- Исправлен клиентский auth runtime-шум: `src/lib/supabase/client.ts` переведён на singleton browser client, `src/hooks/useAuth.ts` больше не создаёт новые client/service на каждом рендере
+- Это уменьшает количество повторных auth-запросов Supabase и вероятность каскадных `Failed to fetch` в консоли
+- Исправлен потенциальный источник `TypeError: Failed to fetch`: `src/lib/omdb/client.ts` переведён с `http://www.omdbapi.com` на `https://www.omdbapi.com`
+- `next.config.ts` синхронизирован под HTTPS для `www.omdbapi.com`
+- Проверка после правки: `bunx biome check --write "src/lib/omdb/client.ts" "next.config.ts"`
+- Исправлено определение корня Next.js/Turbopack: в `next.config.ts` добавлен `turbopack.root = process.cwd()`
+- Диагностировано, что падение `bun run dev` вызвано не этим предупреждением, а существующим lock-файлом `/.next/dev/lock` или уже запущенным экземпляром `next dev`
+- `src/app/(dashboard)/dashboard/page.tsx` переведён на `Promise.allSettled`, чтобы один неудачный `fetch` не ломал весь экран рекомендаций
+- Проверено: `bunx biome check --write "src/app/(dashboard)/dashboard/page.tsx"`
+
 ### 2026-03-20 (сессия 4)
 - Создан `/api/user/movies/favorites` — API route для избранного
 - Создан `/api/user/movies/watched` — API route для просмотренных
@@ -95,4 +120,4 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 
 ## Контроль изменений
 - **last_checked_commit:** acabe57
-- **Последняя проверка:** 2026-04-16
+- **Последняя проверка:** 2026-04-17

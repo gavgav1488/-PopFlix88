@@ -1,3 +1,4 @@
+import type { AuthResponse } from "@supabase/supabase-js";
 import type {
   FavoriteMovie,
   User,
@@ -16,14 +17,18 @@ export class SupabaseService {
   private supabase = createClient();
 
   // Аутентификация
-  async signUp(email: string, password: string, fullName?: string) {
+  async signUp(
+    email: string,
+    password: string,
+    fullName?: string,
+  ): Promise<AuthResponse["data"]> {
     const { data, error } = await this.supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     });
     if (error) throw error;
-    return data.user;
+    return data;
   }
 
   async signIn(email: string, password: string) {

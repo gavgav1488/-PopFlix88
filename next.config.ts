@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
 
+  turbopack: {
+    root: process.cwd(),
+  },
+
   // Ускорение разработки
   experimental: {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-slot"],
@@ -21,7 +25,7 @@ const nextConfig: NextConfig = {
         hostname: "**.supabase.co",
       },
       {
-        protocol: "http",
+        protocol: "https",
         hostname: "www.omdbapi.com",
       },
       {

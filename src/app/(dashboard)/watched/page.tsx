@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { fetchWithRetry } from "@/lib/fetch/client";
 
 interface WatchedMovie {
   id: string;
@@ -26,7 +27,7 @@ export default function WatchedPage() {
   const fetchWatched = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/user/movies/watched");
+      const res = await fetchWithRetry("/api/user/movies/watched");
       const data = await res.json();
       if (res.ok) {
         setMovies(data.movies || []);
@@ -45,7 +46,9 @@ export default function WatchedPage() {
   }, [fetchWatched]);
 
   const handleRemove = async (movieId: string) => {
-    await fetch(`/api/user/movies/${movieId}/watched`, { method: "DELETE" });
+    await fetchWithRetry(`/api/user/movies/${movieId}/watched`, {
+      method: "DELETE",
+    });
     setMovies((prev) => prev.filter((m) => m.movie_id !== movieId));
   };
 

@@ -32,7 +32,7 @@ interface OMDbMovieResponse {
 
 export class OMDbClient {
   private apiKey: string;
-  private baseURL = "http://www.omdbapi.com";
+  private baseURL = "https://www.omdbapi.com";
 
   constructor() {
     this.apiKey =

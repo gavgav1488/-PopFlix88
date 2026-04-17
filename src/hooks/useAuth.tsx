@@ -1,26 +1,41 @@
 "use client";
 
-import type { User } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { SupabaseService } from "@/lib/supabase/service";
 
-export function useAuth() {
+const supabase = createClient();
+const supabaseService = new SupabaseService();
+
+interface AuthContextValue {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  signIn: (email: string, password: string) => Promise<User | null>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName?: string,
+  ) => Promise<{ user: User | null; session: Session | null }>;
+  signOut: () => Promise<void>;
+  isAuthenticated: boolean;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClient();
-  const supabaseService = new SupabaseService();
-
   useEffect(() => {
-    // Получаем текущего пользователя
-    const getUser = async () => {
+    const getInitialSession = async () => {
       try {
         const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setUser(user);
+          data: { session },
+        } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
       } catch (error) {
         console.error("Error getting user:", error);
       } finally {
@@ -28,9 +43,8 @@ export function useAuth() {
       }
     };
 
-    getUser();
+    getInitialSession();
 
-    // Подписываемся на изменения аутентификации
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -39,7 +53,7 @@ export function useAuth() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -63,8 +77,11 @@ export function useAuth() {
       setError(null);
       setLoading(true);
 
-      const user = await supabaseService.signUp(email, password, fullName);
-      return user;
+      const authData = await supabaseService.signUp(email, password, fullName);
+      return {
+        user: authData.user,
+        session: authData.session,
+      };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Ошибка регистрации";
@@ -87,7 +104,7 @@ export function useAuth() {
     }
   };
 
-  return {
+  const value: AuthContextValue = {
     user,
     loading,
     error,
@@ -96,4 +113,16 @@ export function useAuth() {
     signOut,
     isAuthenticated: !!user,
   };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+
+  return context;
 }

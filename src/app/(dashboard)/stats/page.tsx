@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { fetchWithRetry } from "@/lib/fetch/client";
 
 interface UserStats {
   totalWatched: number;
@@ -31,7 +32,7 @@ export default function StatsPage() {
   const fetchUserStats = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/user/stats");
+      const response = await fetchWithRetry("/api/user/stats");
       const data = await response.json();
       if (response.ok) {
         setStats(data);

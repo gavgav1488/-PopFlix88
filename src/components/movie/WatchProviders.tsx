@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { fetchWithRetry } from "@/lib/fetch/client";
 import type { WatchProvider } from "@/types";
 
 interface WatchProvidersProps {
@@ -22,7 +23,7 @@ export function WatchProviders({ movieId }: WatchProvidersProps) {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
+        const response = await fetchWithRetry(
           `/api/movies/providers?movieId=${movieId}`,
         );
         const data = await response.json();

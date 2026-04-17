@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { fetchWithRetry } from "@/lib/fetch/client";
 import type { Movie } from "@/types";
 
 interface MovieDetailsProps {
@@ -33,7 +34,7 @@ export function MovieDetails({ movie }: MovieDetailsProps) {
 
   const fetchUserMovieData = useCallback(async () => {
     try {
-      const response = await fetch(`/api/user/movies/${movie.id}`);
+      const response = await fetchWithRetry(`/api/user/movies/${movie.id}`);
       if (response.ok) {
         const data = await response.json();
         setUserRating(data.rating);
@@ -55,11 +56,14 @@ export function MovieDetails({ movie }: MovieDetailsProps) {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/user/movies/${movie.id}/favorite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_favorite: !isFavorite }),
-      });
+      const response = await fetchWithRetry(
+        `/api/user/movies/${movie.id}/favorite`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_favorite: !isFavorite }),
+        },
+      );
       if (response.ok) setIsFavorite(!isFavorite);
     } catch (error) {
       console.error("Error toggling favorite:", error);
@@ -72,11 +76,14 @@ export function MovieDetails({ movie }: MovieDetailsProps) {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/user/movies/${movie.id}/watched`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_watched: !isWatched }),
-      });
+      const response = await fetchWithRetry(
+        `/api/user/movies/${movie.id}/watched`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_watched: !isWatched }),
+        },
+      );
       if (response.ok) setIsWatched(!isWatched);
     } catch (error) {
       console.error("Error marking as watched:", error);
@@ -89,11 +96,14 @@ export function MovieDetails({ movie }: MovieDetailsProps) {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/user/movies/${movie.id}/rating`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating }),
-      });
+      const response = await fetchWithRetry(
+        `/api/user/movies/${movie.id}/rating`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rating }),
+        },
+      );
       if (response.ok) {
         setUserRating(rating);
         if (!isWatched) setIsWatched(true);

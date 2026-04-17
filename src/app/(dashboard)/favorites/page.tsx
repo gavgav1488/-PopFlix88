@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { fetchWithRetry } from "@/lib/fetch/client";
 
 interface FavoriteMovie {
   id: string;
@@ -26,7 +27,7 @@ export default function FavoritesPage() {
   const fetchFavorites = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/user/movies/favorites");
+      const res = await fetchWithRetry("/api/user/movies/favorites");
       const data = await res.json();
       if (res.ok) {
         setMovies(data.movies || []);
@@ -45,7 +46,7 @@ export default function FavoritesPage() {
   }, [fetchFavorites]);
 
   const handleRemove = async (movieId: string) => {
-    await fetch(`/api/user/movies/${movieId}/favorite`, {
+    await fetchWithRetry(`/api/user/movies/${movieId}/favorite`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_favorite: false }),

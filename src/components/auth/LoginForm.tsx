@@ -29,8 +29,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { type LoginFormData, loginSchema } from "@/lib/validations/auth";
 
 function translateAuthError(message: string): string {
-  if (message.includes("Email not confirmed"))
-    return "Email не подтверждён. Проверьте почту или обратитесь к администратору.";
   if (message.includes("Invalid login credentials"))
     return "Неверный email или пароль.";
   if (message.includes("Too many requests"))

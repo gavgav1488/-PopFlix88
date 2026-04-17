@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MovieGrid } from "@/components/movie/MovieGrid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { fetchWithRetry } from "@/lib/fetch/client";
 import type { Movie } from "@/types";
 
 export default function SearchPage() {
@@ -24,7 +25,7 @@ export default function SearchPage() {
         setLoading(true);
         setHasSearched(true);
 
-        const response = await fetch(
+        const response = await fetchWithRetry(
           `/api/movies/search?q=${encodeURIComponent(queryToSearch.trim())}`,
         );
         const data = await response.json();

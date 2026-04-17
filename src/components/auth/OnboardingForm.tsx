@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { fetchWithRetry } from "@/lib/fetch/client";
 import type { Genre } from "@/types";
 
 export function OnboardingForm() {
@@ -27,7 +28,7 @@ export function OnboardingForm() {
   useEffect(() => {
     const fetchGenres = async () => {
       try {
-        const response = await fetch("/api/movies/genres");
+        const response = await fetchWithRetry("/api/movies/genres");
         const data = await response.json();
         setGenres(data.genres || []);
       } catch (err) {
@@ -58,7 +59,7 @@ export function OnboardingForm() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/user/preferences", {
+      const response = await fetchWithRetry("/api/user/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

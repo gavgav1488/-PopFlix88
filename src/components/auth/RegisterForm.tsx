@@ -26,11 +26,37 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { useAuth } from "@/hooks/useAuth";
+import { fetchWithRetry } from "@/lib/fetch/client";
 import { type RegisterFormData, registerSchema } from "@/lib/validations/auth";
+
+function translateRegisterError(message: string): string {
+  if (message.includes("User already registered")) {
+    return "Пользователь с таким email уже существует. Попробуйте войти.";
+  }
+
+  if (message.includes("Password should be at least")) {
+    return "Пароль слишком короткий.";
+  }
+
+  if (message.includes("Unable to validate email address")) {
+    return "Не удалось проверить email. Проверьте адрес и попробуйте ещё раз.";
+  }
+
+  if (message.includes("Signup is disabled")) {
+    return "Регистрация временно недоступна.";
+  }
+
+  if (message.includes("already been registered")) {
+    return "Пользователь с таким email уже существует. Попробуйте войти.";
+  }
+
+  return message;
+}
 
 export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { signUp } = useAuth();
+  const [formError, setFormError] = useState<string | null>(null);
+  const { signIn } = useAuth();
   const router = useRouter();
 
   const form = useForm<RegisterFormData>({
@@ -38,7 +64,6 @@ export function RegisterForm() {
     defaultValues: {
       email: "",
       password: "",
-      confirmPassword: "",
       fullName: "",
     },
   });
@@ -46,13 +71,31 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setIsLoading(true);
-      await signUp(data.email, data.password, data.fullName);
+      setFormError(null);
+      const normalizedFullName = data.fullName.trim();
+      const registerResponse = await fetchWithRetry("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          fullName: normalizedFullName === "" ? undefined : normalizedFullName,
+        }),
+      });
+      const registerData = (await registerResponse.json()) as {
+        error?: string;
+      };
 
-      // После успешной регистрации перенаправляем на онбординг
+      if (!registerResponse.ok) {
+        throw new Error(registerData.error || "Ошибка регистрации");
+      }
+
+      await signIn(data.email, data.password);
       router.push("/onboarding");
     } catch (error) {
-      console.error("Registration error:", error);
-      // Ошибка уже обрабатывается в useAuth
+      const message =
+        error instanceof Error ? error.message : "Ошибка регистрации";
+      setFormError(translateRegisterError(message));
     } finally {
       setIsLoading(false);
     }
@@ -81,6 +124,7 @@ export function RegisterForm() {
                   <FormControl>
                     <Input
                       placeholder="Ваше имя"
+                      autoComplete="name"
                       disabled={isLoading}
                       {...field}
                     />
@@ -100,6 +144,7 @@ export function RegisterForm() {
                     <Input
                       type="email"
                       placeholder="your@email.com"
+                      autoComplete="email"
                       disabled={isLoading}
                       {...field}
                     />
@@ -119,6 +164,7 @@ export function RegisterForm() {
                     <Input
                       type="password"
                       placeholder="••••••••"
+                      autoComplete="new-password"
                       disabled={isLoading}
                       {...field}
                     />
@@ -128,24 +174,11 @@ export function RegisterForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Подтвердите пароль</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {formError && (
+              <p className="text-sm text-destructive text-center">
+                {formError}
+              </p>
+            )}
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
