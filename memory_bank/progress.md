@@ -1,7 +1,7 @@
 # Progress: PopFlix
 
 ## Статус проекта
-🟡 В разработке — ~52% (см. Project Deliverables в projectbrief.md)
+🟡 В разработке — ~60% (см. Project Deliverables в projectbrief.md)
 
 ## Что готово
 - ✅ Next.js проект инициализирован и настроен
@@ -21,6 +21,8 @@
 2. WatchProviders всегда пустой (OMDb не поддерживает)
 3. Постеры актёров недоступны (OMDb не предоставляет)
 4. Типизация Supabase - LSP показывает ошибки типов, но код работает (кеширование)
+5. Legacy-папка `popflix/` попадает в общий `tsconfig` и засоряет результат `bunx tsc --noEmit` нерелевантными ошибками
+6. В текущем окружении проверка сборки нестабильна: `bun run build` не находит `next`, а `bunx next build` падает на Turbopack root resolution
 
 ## SQL для создания таблицы user_movies
 ```sql
@@ -81,6 +83,13 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - `src/app/(dashboard)/dashboard/page.tsx` переведён на `Promise.allSettled`, чтобы один неудачный `fetch` не ломал весь экран рекомендаций
 - Проверено: `bunx biome check --write "src/app/(dashboard)/dashboard/page.tsx"`
 
+### 2026-04-28
+- `memory_bank/projectbrief.md` синхронизирован с актуальным `AGENTS.md`: раздел `## Project Deliverables` переведен в каноническую markdown-таблицу `ID | Deliverable | Status | Weight`, веса сохранены с точной суммой `100`
+- Исправлена потеря состояния в `src/app/api/user/movies/[id]/favorite/route.ts`, `watched/route.ts`, `rating/route.ts`: частичные обновления записи `user_movies` теперь сохраняют уже существующие `is_favorite`, `is_watched`, `rating`, `watched_at`
+- Добавлен `DELETE` в `src/app/api/user/movies/[id]/watched/route.ts`, чтобы удаление из `/watched` соответствовало фактическому вызову UI
+- Проверено: `bunx biome check "src/app/api/user/movies/[id]/favorite/route.ts" "src/app/api/user/movies/[id]/watched/route.ts" "src/app/api/user/movies/[id]/rating/route.ts"`
+- Верификация выявила внешние blockers проекта: `bun run build` падает с `bun: command not found: next`, `bunx next build` падает на определении workspace root/Turbopack, `bunx tsc --noEmit` засорён legacy-копией проекта в `popflix/`
+
 ### 2026-03-20 (сессия 4)
 - Создан `/api/user/movies/favorites` — API route для избранного
 - Создан `/api/user/movies/watched` — API route для просмотренных
@@ -119,5 +128,5 @@ CREATE INDEX idx_user_movies_user_id ON public.user_movies(user_id);
 - Обновлена структура проекта (перемещено из popflix/ в корень)
 
 ## Контроль изменений
-- **last_checked_commit:** acabe57
-- **Последняя проверка:** 2026-04-17
+- **last_checked_commit:** 4b61ec71b51010e1c66b64be936c25da46904544
+- **Последняя проверка:** 2026-04-28

@@ -30,18 +30,18 @@
 
 ## Project Deliverables
 
-| ID | Результат | Статус | Вес |
-|----|-----------|--------|-----|
-| D01 | Инфраструктура: Next.js + Supabase + OMDb настроены | completed | 10% |
-| D02 | Аутентификация: регистрация, вход, выход | completed | 15% |
-| D03 | Онбординг: выбор жанровых предпочтений | in_progress | 10% |
-| D04 | База данных: таблица `user_movies` создана и работает | completed | 10% |
-| D05 | Dashboard: главная страница с рекомендациями | in_progress | 15% |
-| D06 | Страница фильма: детали, рейтинг, избранное, просмотрено | in_progress | 10% |
-| D07 | Поиск фильмов | in_progress | 10% |
-| D08 | Статистика просмотров | blocked | 10% |
-| D09 | Layout: навигация, тема, адаптивность | in_progress | 5% |
-| D10 | Деплой на Vercel | pending | 5% |
+| ID | Deliverable | Status | Weight |
+|----|-------------|--------|--------|
+| D01 | Next.js, Supabase и OMDb infrastructure configured | completed | 10 |
+| D02 | User authentication: register, login, logout | completed | 15 |
+| D03 | Onboarding with preference selection | in_progress | 10 |
+| D04 | Database support for `user_movies` | completed | 10 |
+| D05 | Dashboard with personalized recommendations | in_progress | 15 |
+| D06 | Movie details page with favorite, watched and rating actions | in_progress | 10 |
+| D07 | Movie search experience | in_progress | 10 |
+| D08 | Viewing statistics experience | blocked | 10 |
+| D09 | App layout, theme toggle and responsive navigation | in_progress | 5 |
+| D10 | Vercel deployment | pending | 5 |
 
 **Сумма весов:** 100%
 
@@ -54,3 +54,5 @@
 **Текущий прогресс проекта: ~60%**
 
 > Примечание: D04 (таблица `user_movies`) создана и работает. D08 (статистика) требует данных о просмотрах.
+
+> Дополнительное замечание по состоянию проекта: базовый user flow реализован, но финальная верификация сейчас ограничена внешними проблемами окружения и legacy-копией проекта в `popflix/`, которые мешают чистой проверке `build` и `tsc`.
